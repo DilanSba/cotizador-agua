@@ -1,7 +1,6 @@
-import { Product } from './types';
+import { Product, PaymentMode } from './types';
 
 export const PRODUCTS: Product[] = [
-  // Sistemas de tratamiento (Water products first as requested)
   { 
     id: 'trat-ro', 
     category: 'Sistemas de tratamiento', 
@@ -24,7 +23,6 @@ export const PRODUCTS: Product[] = [
     cashSinIvu: 4941.00, 
     ivuCash: 568.22 
   },
-  // Calentadores
   { 
     id: 'cal-80-1p', 
     category: 'Calentadores', 
@@ -77,7 +75,6 @@ export const PRODUCTS: Product[] = [
     cashSinIvu: 6111.00, 
     ivuCash: 702.77 
   },
-  // Cisternas
   { 
     id: 'cis-eco-500', 
     category: 'Cisternas', 
@@ -121,7 +118,27 @@ export const PRODUCTS: Product[] = [
 
 export const MODE_LABELS: Record<string, string> = { 
   cash: 'Cash', 
-  synchrony: 'Synchrony', 
-  m18: '18 Meses', 
-  m61: '61 Meses' 
+  synchrony: 'Synchrony',
+  oriental: 'Oriental',
+  kiwi: 'Kiwi'
+};
+
+/** Oriental y Cash usan los mismos precios de contado */
+export const isCashType = (mode: PaymentMode): boolean =>
+  mode === 'cash' || mode === 'oriental';
+
+/** Kiwi y Synchrony usan los mismos precios de financiamiento */
+export const isSynchronyType = (mode: PaymentMode): boolean =>
+  mode === 'synchrony' || mode === 'kiwi';
+
+/** Devuelve el precio efectivo del producto según modo */
+export const getEffectivePrice = (
+  product: Product,
+  mode: PaymentMode,
+  installments: 18 | 61 = 18
+): number | null => {
+  if (isCashType(mode)) return product.prices.cash;
+  // synchrony / kiwi
+  if (installments === 61) return product.prices.m61;
+  return product.prices.m18;
 };

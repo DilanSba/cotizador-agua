@@ -1,6 +1,8 @@
 export type Category = 'Calentadores' | 'Cisternas' | 'Sistemas de tratamiento';
 
-export type PaymentMode = 'cash' | 'synchrony';
+// cash y oriental = mismos precios (cash)
+// synchrony y kiwi = mismos precios (synchrony/cuotas)
+export type PaymentMode = 'cash' | 'synchrony' | 'oriental' | 'kiwi';
 
 export interface Product {
   id: string;
