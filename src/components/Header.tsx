@@ -2,6 +2,7 @@ import React from 'react';
 import { PaymentMode } from '../types';
 import { MODE_LABELS } from '../constants';
 import { ChevronDown } from 'lucide-react';
+import { DarkModeToggle } from './DarkModeToggle';
 
 interface HeaderProps {
   mode: PaymentMode;
@@ -26,7 +27,8 @@ export const Header: React.FC<HeaderProps> = ({ mode, setMode }) => {
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+        <DarkModeToggle />
         <div className="flex bg-white border border-slate-200 rounded-full p-1 gap-0.5 shadow-sm">
           <button
             onClick={() => setMode('cash')}
