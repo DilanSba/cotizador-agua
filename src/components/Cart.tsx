@@ -72,8 +72,8 @@ export function Cart({
   const roItem = items.find((i) => i.product.id === RO_PRODUCT_ID);
   const roItemTotal = roItem ? getItemPrice(roItem, mode) * roItem.quantity : 0;
   const otherItemsTotal = subtotal - roItemTotal;
-  const roDiscount = showRODiscount ? otherItemsTotal * 0.05 : 0;
-  const bonusDiscount = hasBonus && subtotal > 0 ? subtotal * 0.05 : 0;
+  const roDiscount = showRODiscount ? 1000 : 0;
+  const bonusDiscount = hasBonus && subtotal > 0 ? 500 : 0;
   const total = subtotal - roDiscount - bonusDiscount;
   const remaining = Math.max(0, total - downPayment);
 
@@ -178,26 +178,42 @@ export function Cart({
       {/* Discounts and totals */}
       <div className="px-5 py-4 bg-slate-900/50 space-y-3">
         {showRODiscount && (
-          <div className="bg-blue-900/40 border border-blue-700/50 rounded-lg px-3 py-2 text-xs text-blue-200">
-            <span className="font-bold text-blue-300">Descuento RO incluido:</span>{" "}
-            5% sobre otros productos al comprar sistema de osmosis inversa.{" "}
-            <span className="float-right text-green-400 font-bold">-{fmt(roDiscount)}</span>
+          <div className="bg-emerald-900/40 border border-emerald-700/50 rounded-lg px-3 py-2 text-xs text-emerald-200">
+            <p className="font-bold text-emerald-300 mb-0.5">💧 Bundle Reverse Osmosis: -$1,000</p>
+            <p className="text-emerald-300/80">¿Comprarás un Reverse Osmosis junto a un producto de WindMar Home? Se aplica descuento de $1,000 en el RO.</p>
+            <span className="float-right text-green-400 font-bold mt-1">-{fmt(roDiscount)}</span>
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="space-y-1.5">
           <button
             onClick={onToggleBonus}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
               hasBonus
-                ? 'bg-green-700 text-white hover:bg-green-600'
+                ? 'bg-emerald-700 text-white hover:bg-emerald-600'
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            Bono especial (5%)
+            <div className="flex items-center gap-2 text-left">
+              <span>☀️💧</span>
+              <div>
+                <p className="text-xs font-bold leading-tight">Bundle Solar + Agua (-$500)</p>
+                <p className={`text-[10px] leading-tight mt-0.5 ${hasBonus ? 'text-emerald-200' : 'text-slate-400'}`}>Programa Firma y Gana · Referidos</p>
+              </div>
+            </div>
+            <div className={`w-8 h-4 rounded-full relative flex-shrink-0 transition-colors ${hasBonus ? 'bg-white/30' : 'bg-slate-600'}`}>
+              <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${hasBonus ? 'translate-x-4' : 'translate-x-0.5'}`} />
+            </div>
           </button>
           {hasBonus && (
-            <span className="text-green-400 text-sm font-bold">-{fmt(bonusDiscount)}</span>
+            <div className="px-3 py-1.5 bg-emerald-900/30 border border-emerald-800/50 rounded-lg text-[10px] text-emerald-300">
+              ¿Comprarás un sistema solar junto a tu solución de agua? Se aplica descuento de $500 al participar en nuestro Programa de Referidos, Firma y Gana.
+            </div>
+          )}
+          {hasBonus && (
+            <div className="flex justify-end">
+              <span className="text-green-400 text-sm font-bold">-{fmt(bonusDiscount)}</span>
+            </div>
           )}
         </div>
 
@@ -229,13 +245,13 @@ export function Cart({
           )}
           {roDiscount > 0 && (
             <div className="flex justify-between text-sm text-green-400">
-              <span>Desc. RO:</span>
+              <span>Bundle RO (-$1,000):</span>
               <span>-{fmt(roDiscount)}</span>
             </div>
           )}
           {bonusDiscount > 0 && (
             <div className="flex justify-between text-sm text-green-400">
-              <span>Bono especial:</span>
+              <span>Bundle Solar + Agua (-$500):</span>
               <span>-{fmt(bonusDiscount)}</span>
             </div>
           )}

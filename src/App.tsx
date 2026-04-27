@@ -143,8 +143,8 @@ export default function App() {
     const lines = [
       '🌊 COTIZADOR WATER PRO',
       `Modo de pago: ${modeLabel}`,
-      hasBonus ? '🎁 Bono Instala & Gana: -$500.00 aplicado' : '',
-      applyRODiscount ? '✨ Descuento Combo RO: -$1,000.00 aplicado' : '',
+      hasBonus ? '☀️💧 Bundle Solar + Agua (Firma y Gana): -$500.00 aplicado' : '',
+      applyRODiscount ? '💧 Bundle Reverse Osmosis: -$1,000.00 aplicado' : '',
       downPayment > 0 ? `💰 Pronto (Down Payment): -${fmt.format(downPayment)} aplicado` : '',
       '─'.repeat(34),
       ...cart.map(item => {
@@ -251,7 +251,7 @@ export default function App() {
       return `• ${c.product.name} ×${c.quantity}: ${fmt.format((price || 0) * c.quantity)}${mode === 'synchrony' ? ` (${c.installments} meses)` : ''}`;
     }).join('\n');
 
-    let msg = `🌊 *COTIZADOR WATER PRO*\nModo: ${modeLabel}\n${hasBonus ? '🎁 *Bono Instala & Gana: -$500.00 aplicado*\n' : ''}${applyRODiscount ? '✨ *Descuento Combo RO: -$1,000.00 aplicado*\n' : ''}${downPayment > 0 ? `💰 *Pronto (Down Payment): -${fmt.format(downPayment)} aplicado*\n` : ''}\n${itemsText}\n\n*${mode === 'synchrony' ? 'TOTAL MENSUAL' : 'TOTAL'}: ${fmt.format(finalTotal)}*`;
+    let msg = `🌊 *COTIZADOR WATER PRO*\nModo: ${modeLabel}\n${hasBonus ? '☀️💧 *Bundle Solar + Agua (Firma y Gana): -$500.00 aplicado*\n' : ''}${applyRODiscount ? '💧 *Bundle Reverse Osmosis: -$1,000.00 aplicado*\n' : ''}${downPayment > 0 ? `💰 *Pronto (Down Payment): -${fmt.format(downPayment)} aplicado*\n` : ''}\n${itemsText}\n\n*${mode === 'synchrony' ? 'TOTAL MENSUAL' : 'TOTAL'}: ${fmt.format(finalTotal)}*`;
     
     if (mode === 'synchrony') {
       const totalFinanciado = cart.reduce((s, c) => s + (c.product.prices.synchrony || 0) * c.quantity, 0);
