@@ -28,3 +28,24 @@ export interface CartItem {
   quantity: number;
   installments?: 18 | 61;
 }
+
+export interface ConsultorInfo {
+  nombre: string;
+  correo: string;
+  telefono: string;
+}
+
+export interface ClienteInfo {
+  nombre: string;
+  correo: string;
+  telefono: string;
+  direccion: string;
+}
+
+export interface CotizacionFormData {
+  consultor: ConsultorInfo;
+  cliente: ClienteInfo;
+  selectedModes: PaymentMode[];
+  installmentsSync: (18 | 61)[];
+  installmentsKiwi: (18 | 61)[];
+}

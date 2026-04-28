@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FileDown } from 'lucide-react';
 
 type PaymentMode = 'cash' | 'synchrony' | 'oriental' | 'kiwi';
 
@@ -32,6 +33,7 @@ interface CartProps {
   onClear: () => void;
   onCopy: () => void;
   onWhatsApp: () => void;
+  onPDF: () => void;
 }
 
 function getItemPrice(item: CartItem, mode: PaymentMode): number {
@@ -60,6 +62,7 @@ export function Cart({
   onClear,
   onCopy,
   onWhatsApp,
+  onPDF,
 }: CartProps) {
   const hasRO = items.some((i) => i.product.id === RO_PRODUCT_ID);
   const hasOtherProduct = items.some((i) => i.product.id !== RO_PRODUCT_ID);
@@ -266,6 +269,17 @@ export function Cart({
             </div>
           )}
         </div>
+      </div>
+
+      {/* PDF button */}
+      <div className="px-5 pt-4">
+        <button
+          onClick={onPDF}
+          className="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25"
+        >
+          <FileDown className="w-4 h-4" />
+          Generar Cotización PDF
+        </button>
       </div>
 
       {/* Action buttons */}

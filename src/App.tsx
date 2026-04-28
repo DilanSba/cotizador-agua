@@ -7,9 +7,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Header } from './components/Header';
 import { ProductCard } from './components/ProductCard';
 import { Cart } from './components/Cart';
-import { Product, PaymentMode, CartItem, Category } from './types';
+import { CotizacionModal } from './components/CotizacionModal';
+import { Product, PaymentMode, CartItem, Category, CotizacionFormData } from './types';
 import { PRODUCTS, MODE_LABELS } from './constants';
-import { Search, Filter, CheckCircle2, AlertCircle, Home, X } from 'lucide-react';
+import { downloadCotizacionPDF } from './hooks/usePDFCotizacion';
+import { Search, CheckCircle2, AlertCircle, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
@@ -23,6 +25,8 @@ export default function App() {
   const [toast, setToast] = useState<{ msg: string; isError?: boolean } | null>(null);
   const [hasBonus, setHasBonus] = useState(false);
   const [downPayment, setDownPayment] = useState(0);
+  const [showPDFModal, setShowPDFModal] = useState(false);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsSplashVisible(false), 3000);
@@ -265,8 +269,32 @@ export default function App() {
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
+  const hasRO = cart.some(item => item.product.id === 'trat-ro');
+  const hasOtherForPDF = cart.some(item => item.product.id !== 'trat-ro');
+  const hasROAndOther = hasRO && hasOtherForPDF;
+
+  const handlePDFGenerate = async (formData: CotizacionFormData) => {
+    setIsGeneratingPDF(true);
+    try {
+      await downloadCotizacionPDF(cart, formData, hasBonus, hasROAndOther, downPayment);
+      setShowPDFModal(false);
+      showToast('PDF descargado correctamente ✓');
+    } catch (err) {
+      console.error(err);
+      showToast('Error al generar el PDF', true);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F0F4FA] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+      <CotizacionModal
+        isOpen={showPDFModal}
+        isGenerating={isGeneratingPDF}
+        onClose={() => setShowPDFModal(false)}
+        onGenerate={handlePDFGenerate}
+      />
       <AnimatePresence>
         {isSplashVisible && (
           <motion.div 
@@ -494,6 +522,7 @@ export default function App() {
               onClear={handleClearCart}
               onCopy={handleCopyQuote}
               onWhatsApp={handleWhatsApp}
+              onPDF={() => setShowPDFModal(true)}
             />
           </aside>
         </div>
