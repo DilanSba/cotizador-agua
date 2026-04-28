@@ -221,7 +221,14 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
     }, 0);
 
     const sdsc = hasSolarBundle ? (col.isMonthly ? 500 / (col.installments ?? 18) : 500) : 0;
-    const rdsc = hasROBundle    ? (col.isMonthly ? 1000 / (items.find(i => i.product.id === 'trat-ro')?.installments ?? 18) : 1000) : 0;
+
+    // Only apply RO bundle discount if RO actually has a price in this column
+    const roItem = items.find(i => i.product.id === 'trat-ro');
+    const roHasPrice = roItem != null && col.getPrice(roItem) != null;
+    const rdsc = (hasROBundle && roHasPrice)
+      ? (col.isMonthly ? 1000 / (col.installments ?? 18) : 1000)
+      : 0;
+
     const dpdsc = col.isMonthly ? downPayment / (col.installments ?? 18) : downPayment;
 
     return sub - sdsc - rdsc - dpdsc;
