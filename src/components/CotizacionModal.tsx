@@ -66,7 +66,6 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
   const [cliente, setCliente] = useState<ClienteInfo>({ nombre: '', correo: '', telefono: '', direccion: '' });
   const [selectedModes, setSelectedModes] = useState<PaymentMode[]>(['cash']);
   const [installmentsSync, setInstallmentsSync] = useState<(18 | 61)[]>([18]);
-  const [installmentsKiwi, setInstallmentsKiwi] = useState<(18 | 61)[]>([18]);
   const [errors, setErrors] = useState<FormErrors>({});
 
   if (!isOpen) return null;
@@ -98,7 +97,7 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
     if (!cliente.nombre.trim())   err.clienteNombre   = 'Requerido';
     if (selectedModes.length === 0) err.modos = 'Selecciona al menos un modo';
     if (Object.keys(err).length) { setErrors(err); return; }
-    onGenerate({ consultor, cliente, selectedModes, installmentsSync, installmentsKiwi });
+    onGenerate({ consultor, cliente, selectedModes, installmentsSync, installmentsKiwi: [] });
   };
 
   return (
@@ -287,31 +286,6 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
                 </motion.div>
               )}
 
-              {/* Kiwi installments */}
-              {selectedModes.includes('kiwi') && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-3 p-3 bg-amber-900/20 border border-amber-700/30 rounded-xl overflow-hidden"
-                >
-                  <p className="text-[10px] font-bold text-amber-300 uppercase tracking-[0.15em] mb-2">
-                    Kiwi — Plazo de cuotas
-                  </p>
-                  <div className="flex gap-2">
-                    {([18, 61] as const).map(m => (
-                      <button key={m} type="button" disabled={isGenerating}
-                        onClick={() => toggleInstallment(installmentsKiwi, setInstallmentsKiwi, m)}
-                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all
-                          ${installmentsKiwi.includes(m)
-                            ? 'bg-amber-500 border-amber-400 text-white'
-                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:border-amber-500/50'}`}
-                      >
-                        {m} meses
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
             </div>
 
             {/* Actions */}
