@@ -1,6 +1,6 @@
 import React from 'react';
 import { Product, PaymentMode } from '../types';
-import { MODE_LABELS, isCashType, isSynchronyType } from '../constants';
+import { MODE_LABELS, isCashType, isSynchronyType, isKiwiType } from '../constants';
 import { Users, Plus, Check } from 'lucide-react';
 
 interface ProductCardProps {
@@ -17,23 +17,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, mode, onAddTo
 
   const isCash  = isCashType(mode);
   const isSynch = isSynchronyType(mode);
+  const isKiwi  = isKiwiType(mode);
 
   // Precio principal a mostrar
   const price: number | null = isCash
     ? product.prices.cash
-    : (selectedInstallments === 61 ? product.prices.m61 : product.prices.m18);
+    : isKiwi
+      ? product.prices.synchrony
+      : (selectedInstallments === 61 ? product.prices.m61 : product.prices.m18);
 
   const isUnavailable = price === null;
 
   // Colores según modo
-  const accentColor  = isSynch ? 'text-violet-600'   : 'text-blue-600';
-  const panelBg      = isSynch ? 'bg-violet-50'      : 'bg-blue-50';
-  const panelBorder  = isSynch ? 'border-violet-100' : 'border-blue-100';
-  const panelText    = isSynch ? 'text-violet-700'   : 'text-blue-700';
+  const accentColor  = isSynch ? 'text-violet-600'  : isKiwi ? 'text-amber-600'  : 'text-blue-600';
+  const panelBg      = isSynch ? 'bg-violet-50'     : isKiwi ? 'bg-amber-50'     : 'bg-blue-50';
+  const panelBorder  = isSynch ? 'border-violet-100': isKiwi ? 'border-amber-100': 'border-blue-100';
+  const panelText    = isSynch ? 'text-violet-700'  : isKiwi ? 'text-amber-700'  : 'text-blue-700';
   const toggleActive = isSynch ? 'bg-violet-600 text-white shadow-violet-600/20' : 'bg-blue-600 text-white shadow-blue-600/20';
   const btnColor     = isSynch
     ? 'bg-violet-600 shadow-violet-600/25 hover:bg-violet-700'
-    : 'bg-blue-600 shadow-blue-600/25 hover:bg-blue-700';
+    : isKiwi
+      ? 'bg-amber-500 shadow-amber-500/25 hover:bg-amber-600'
+      : 'bg-blue-600 shadow-blue-600/25 hover:bg-blue-700';
 
   const getCategoryClass = (cat: string) => {
     switch (cat) {
@@ -98,8 +103,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, mode, onAddTo
           {/* Precio principal */}
           <div className="flex items-end justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <div className={`text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5 ${isSynch ? 'text-violet-400' : 'text-slate-400'}`}>
-                {isSynch ? `Mensualidad · ${MODE_LABELS[mode]}` : `Precio · ${MODE_LABELS[mode]}`}
+              <div className={`text-[9px] uppercase tracking-[0.18em] font-bold mb-0.5
+                ${isSynch ? 'text-violet-400' : isKiwi ? 'text-amber-500' : 'text-slate-400'}`}>
+                {isSynch ? `Mensualidad · ${MODE_LABELS[mode]}` : `Total · ${MODE_LABELS[mode]}`}
               </div>
               <div className={`font-mono font-black leading-none ${isUnavailable ? 'text-sm italic text-slate-400' : accentColor + ' text-[1.65rem]'}`}>
                 {isUnavailable ? 'No disponible' : fmt.format(price)}
@@ -141,16 +147,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, mode, onAddTo
             </div>
           )}
 
-          {/* Panel Financiado — Synchrony & Kiwi */}
+          {/* Panel Financiado — Synchrony (con selector de plazos) */}
           {!isUnavailable && isSynch && (
             <div className={`${panelBg} rounded-xl px-3 py-2.5 flex flex-col gap-2 border ${panelBorder} shadow-sm`}>
-              {/* Total financiado */}
               <div className="flex justify-between items-center">
                 <span className={`text-[9px] font-bold uppercase tracking-wider ${panelText}`}>Total Financiado</span>
                 <span className={`font-mono text-[13px] font-black ${panelText}`}>{fmt.format(product.prices.synchrony ?? 0)}</span>
               </div>
-
-              {/* IVU del financiado */}
               {product.synchronySinIvu && (
                 <>
                   <div className="h-px bg-violet-200 opacity-50" />
@@ -164,8 +167,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, mode, onAddTo
                   </div>
                 </>
               )}
-
-              {/* Selector de plazos */}
               <div className={`flex bg-white border ${panelBorder} p-0.5 rounded-lg gap-0.5 mt-0.5`}>
                 {([18, 61] as const).map(n => (
                   <button
@@ -178,6 +179,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, mode, onAddTo
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Panel Kiwi — solo total financiado, sin selector de plazos */}
+          {!isUnavailable && isKiwi && (
+            <div className={`${panelBg} rounded-xl px-3 py-2.5 flex flex-col gap-2 border ${panelBorder} shadow-sm`}>
+              {product.synchronySinIvu && (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${panelText}`}>Sin IVU</span>
+                    <span className={`font-mono text-[12px] font-bold ${panelText}`}>{fmt.format(product.synchronySinIvu)}</span>
+                  </div>
+                  <div className="h-px bg-amber-200 opacity-50" />
+                  <div className="flex justify-between items-center">
+                    <span className={`text-[9px] font-bold uppercase tracking-wider ${panelText}`}>IVU (11.5%)</span>
+                    <span className={`font-mono text-[12px] font-bold ${panelText}`}>{fmt.format(product.ivu ?? 0)}</span>
+                  </div>
+                </>
+              )}
             </div>
           )}
 

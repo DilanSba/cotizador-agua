@@ -38,12 +38,12 @@ interface CartProps {
 
 function getItemPrice(item: CartItem, mode: PaymentMode): number {
   const { prices } = item.product;
-  if (mode === 'cash') return prices.cash ?? 0;
+  if (mode === 'cash' || mode === 'oriental') return prices.cash ?? 0;
+  if (mode === 'kiwi') return prices.synchrony ?? 0;
   if (mode === 'synchrony') {
     const inst = item.installments ?? 18;
     return inst === 61 ? (prices.m61 ?? 0) : (prices.m18 ?? 0);
   }
-  if (mode === 'oriental' || mode === 'kiwi') return prices.synchrony ?? 0;
   return 0;
 }
 
@@ -126,7 +126,7 @@ export function Cart({
                         onClick={() => onUpdateInstallments(item.product.id, 18)}
                         className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors ${
                           (item.installments ?? 18) === 18
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-violet-600 text-white'
                             : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                         }`}
                       >
@@ -136,7 +136,7 @@ export function Cart({
                         onClick={() => onUpdateInstallments(item.product.id, 61)}
                         className={`px-2 py-0.5 rounded text-xs font-semibold transition-colors ${
                           item.installments === 61
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-violet-600 text-white'
                             : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                         }`}
                       >

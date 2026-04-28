@@ -23,7 +23,7 @@ export interface EffectiveCol {
 export function buildEffectiveCols(
   selectedModes: PaymentMode[],
   installmentsSync: (18 | 61)[],
-  installmentsKiwi: (18 | 61)[],
+  _installmentsKiwi: (18 | 61)[],
 ): EffectiveCol[] {
   const cols: EffectiveCol[] = [];
 
@@ -57,15 +57,11 @@ export function buildEffectiveCols(
   }
 
   if (selectedModes.includes('kiwi')) {
-    const insts = installmentsKiwi.length > 0 ? installmentsKiwi : [18];
-    const sorted = [...insts].sort((a, b) => a - b);
-    sorted.forEach(inst => {
-      cols.push({
-        key: `kiwi_${inst}`, label: `Kiwi ${inst}m`, shortLabel: `KIWI ${inst}m`,
-        isMonthly: true, installments: inst,
-        color: '#d97706', lightBg: '#fffbeb',
-        getPrice: (item) => inst === 61 ? item.product.prices.m61 : item.product.prices.m18,
-      });
+    cols.push({
+      key: 'kiwi', label: 'Kiwi', shortLabel: 'KIWI',
+      isMonthly: false,
+      color: '#d97706', lightBg: '#fffbeb',
+      getPrice: (item) => item.product.prices.synchrony,
     });
   }
 

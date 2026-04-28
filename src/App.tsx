@@ -16,6 +16,14 @@ import { motion, AnimatePresence } from 'motion/react';
 
 const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 });
 
+function getCartItemPrice(item: CartItem, mode: PaymentMode): number {
+  if (mode === 'cash' || mode === 'oriental') return item.product.prices.cash ?? 0;
+  if (mode === 'kiwi') return item.product.prices.synchrony ?? 0;
+  // synchrony — uses monthly installments
+  const inst = item.installments ?? 18;
+  return inst === 61 ? (item.product.prices.m61 ?? 0) : (item.product.prices.m18 ?? 0);
+}
+
 export default function App() {
   const [mode, setMode] = useState<PaymentMode>('cash');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -115,81 +123,57 @@ export default function App() {
 
   const handleCopyQuote = async () => {
     if (cart.length === 0) return;
-    
-    const total = cart.reduce((s, c) => {
-      if (mode === 'synchrony' && c.installments) {
-        const monthlyPrice = c.installments === 18 ? c.product.prices.m18 : c.product.prices.m61;
-        return s + (monthlyPrice || 0) * c.quantity;
-      }
-      return s + (c.product.prices[mode] || 0) * c.quantity;
-    }, 0);
 
-    // RO Discount Logic: $1000 off RO if there's another product
+    const isSynch = mode === 'synchrony';
+    const isKiwi  = mode === 'kiwi';
+    const isCash  = mode === 'cash' || mode === 'oriental';
+
+    const total = cart.reduce((s, c) => s + getCartItemPrice(c, mode) * c.quantity, 0);
+
     const hasRO = cart.some(item => item.product.id === 'trat-ro');
     const hasOther = cart.some(item => item.product.id !== 'trat-ro');
     const applyRODiscount = hasRO && hasOther;
-    const roDiscountAmount = applyRODiscount ? 1000 : 0;
+    const roInst = cart.find(i => i.product.id === 'trat-ro')?.installments ?? 18;
 
-    const finalTotal = hasBonus 
-      ? (mode === 'synchrony' 
-          ? total - (500 / (cart[0]?.installments || 18)) - (applyRODiscount ? (1000 / (cart.find(i => i.product.id === 'trat-ro')?.installments || 18)) : 0) - (downPayment / (cart[0]?.installments || 18))
-          : total - 500 - roDiscountAmount - downPayment)
-      : (applyRODiscount 
-          ? (mode === 'synchrony' 
-              ? total - (1000 / (cart.find(i => i.product.id === 'trat-ro')?.installments || 18)) - (downPayment / (cart[0]?.installments || 18))
-              : total - 1000 - downPayment)
-          : (mode === 'synchrony' 
-              ? total - (downPayment / (cart[0]?.installments || 18))
-              : total - downPayment));
+    const discountFor = (flat: number) =>
+      isSynch ? flat / (cart[0]?.installments ?? 18) : flat;
+    const roDiscountFor = (flat: number) =>
+      isSynch ? flat / roInst : flat;
 
-    const modeLabel = MODE_LABELS[mode];
-    
+    const finalTotal = total
+      - (hasBonus ? discountFor(500) : 0)
+      - (applyRODiscount ? roDiscountFor(1000) : 0)
+      - (isSynch ? downPayment / (cart[0]?.installments ?? 18) : downPayment);
+
     const lines = [
       '🌊 COTIZADOR WATER PRO',
-      `Modo de pago: ${modeLabel}`,
+      `Modo de pago: ${MODE_LABELS[mode]}`,
       hasBonus ? '☀️💧 Bundle Solar + Agua (Firma y Gana): -$500.00 aplicado' : '',
       applyRODiscount ? '💧 Bundle Reverse Osmosis: -$1,000.00 aplicado' : '',
       downPayment > 0 ? `💰 Pronto (Down Payment): -${fmt.format(downPayment)} aplicado` : '',
       '─'.repeat(34),
       ...cart.map(item => {
-        const price = mode === 'synchrony' 
-          ? (item.installments === 18 ? item.product.prices.m18 : item.product.prices.m61)
-          : item.product.prices[mode];
-        
-        let line = `• ${item.product.name} ×${item.quantity}  →  ${fmt.format((price || 0) * item.quantity)}`;
-        
-        if (mode === 'cash' && item.product.cashSinIvu) {
+        const price = getCartItemPrice(item, mode);
+        let line = `• ${item.product.name} ×${item.quantity}  →  ${fmt.format(price * item.quantity)}`;
+        if (isCash && item.product.cashSinIvu) {
           line += `\n  (Sin IVU: ${fmt.format(item.product.cashSinIvu * item.quantity)} | IVU: ${fmt.format((item.product.ivuCash || 0) * item.quantity)})`;
         }
-        
-        if (mode === 'synchrony') {
+        if (isSynch) {
           line += ` (${item.installments} meses)`;
           line += `\n  (Total Financiado: ${fmt.format((item.product.prices.synchrony || 0) * item.quantity)})`;
         }
-        
         return line;
       }),
       '─'.repeat(34),
-      `${mode === 'synchrony' ? 'TOTAL MENSUAL' : 'TOTAL'}: ${fmt.format(finalTotal)}`,
+      `${isSynch ? 'TOTAL MENSUAL' : 'TOTAL'}: ${fmt.format(finalTotal)}`,
     ];
 
-    if (mode === 'cash') {
+    if (isCash) {
       const sinIvu = cart.reduce((s, c) => s + (c.product.cashSinIvu || 0) * c.quantity, 0);
-      const ivu = cart.reduce((s, c) => s + (c.product.ivuCash || 0) * c.quantity, 0);
-      
-      let finalSinIvu = hasBonus ? sinIvu - 448.43 : sinIvu; 
-      let finalIvu = hasBonus ? ivu - 51.57 : ivu;
-
-      if (applyRODiscount) {
-        finalSinIvu -= 896.86; // 1000 / 1.115
-        finalIvu -= 103.14;
-      }
-
-      if (downPayment > 0) {
-        finalSinIvu -= (downPayment / 1.115);
-        finalIvu -= (downPayment - (downPayment / 1.115));
-      }
-
+      let finalSinIvu = sinIvu - (hasBonus ? 448.43 : 0) - (applyRODiscount ? 896.86 : 0) - (downPayment > 0 ? downPayment / 1.115 : 0);
+      let finalIvu    = cart.reduce((s, c) => s + (c.product.ivuCash || 0) * c.quantity, 0)
+                        - (hasBonus ? 51.57 : 0) - (applyRODiscount ? 103.14 : 0)
+                        - (downPayment > 0 ? downPayment - downPayment / 1.115 : 0);
       if (sinIvu > 0) {
         lines.push(`Total Sin IVU: ${fmt.format(finalSinIvu)}`);
         lines.push(`Total IVU: ${fmt.format(finalIvu)}`);
@@ -197,14 +181,21 @@ export default function App() {
       }
     }
 
-    if (mode === 'synchrony') {
-      const totalFinanciado = cart.reduce((s, c) => s + (c.product.prices.synchrony || 0) * c.quantity, 0);
-      let finalFinanciado = hasBonus ? totalFinanciado - 500 : totalFinanciado;
-      if (applyRODiscount) finalFinanciado -= 1000;
-      if (downPayment > 0) finalFinanciado -= downPayment;
-      
-      lines.push(`Total Financiado: ${fmt.format(finalFinanciado)}`);
+    if (isSynch) {
+      const totalFinanciado = cart.reduce((s, c) => s + (c.product.prices.synchrony || 0) * c.quantity, 0)
+        - (hasBonus ? 500 : 0) - (applyRODiscount ? 1000 : 0) - downPayment;
+      lines.push(`Total Financiado: ${fmt.format(totalFinanciado)}`);
       lines.push('─'.repeat(34));
+    }
+
+    if (isKiwi) {
+      const sinIvu = cart.reduce((s, c) => s + (c.product.synchronySinIvu || 0) * c.quantity, 0);
+      if (sinIvu > 0) {
+        const ivu = cart.reduce((s, c) => s + (c.product.ivu || 0) * c.quantity, 0);
+        lines.push(`Total Sin IVU: ${fmt.format(sinIvu)}`);
+        lines.push(`Total IVU: ${fmt.format(ivu)}`);
+        lines.push('─'.repeat(34));
+      }
     }
 
     lines.push('');
@@ -220,51 +211,41 @@ export default function App() {
 
   const handleWhatsApp = () => {
     if (cart.length === 0) return;
-    
-    const total = cart.reduce((s, c) => {
-      if (mode === 'synchrony' && c.installments) {
-        const monthlyPrice = c.installments === 18 ? c.product.prices.m18 : c.product.prices.m61;
-        return s + (monthlyPrice || 0) * c.quantity;
-      }
-      return s + (c.product.prices[mode] || 0) * c.quantity;
-    }, 0);
 
-    // RO Discount Logic
+    const isSynch = mode === 'synchrony';
+    const roInst  = cart.find(i => i.product.id === 'trat-ro')?.installments ?? 18;
+
+    const total = cart.reduce((s, c) => s + getCartItemPrice(c, mode) * c.quantity, 0);
+
     const hasRO = cart.some(item => item.product.id === 'trat-ro');
     const hasOther = cart.some(item => item.product.id !== 'trat-ro');
     const applyRODiscount = hasRO && hasOther;
-    const roDiscountAmount = applyRODiscount ? 1000 : 0;
 
-    const finalTotal = hasBonus 
-      ? (mode === 'synchrony' 
-          ? total - (500 / (cart[0]?.installments || 18)) - (applyRODiscount ? (1000 / (cart.find(i => i.product.id === 'trat-ro')?.installments || 18)) : 0) - (downPayment / (cart[0]?.installments || 18))
-          : total - 500 - roDiscountAmount - downPayment)
-      : (applyRODiscount 
-          ? (mode === 'synchrony' 
-              ? total - (1000 / (cart.find(i => i.product.id === 'trat-ro')?.installments || 18)) - (downPayment / (cart[0]?.installments || 18))
-              : total - 1000 - downPayment)
-          : (mode === 'synchrony' 
-              ? total - (downPayment / (cart[0]?.installments || 18))
-              : total - downPayment));
+    const discountFor = (flat: number) => isSynch ? flat / (cart[0]?.installments ?? 18) : flat;
+    const roDiscountFor = (flat: number) => isSynch ? flat / roInst : flat;
 
-    const modeLabel = MODE_LABELS[mode];
+    const finalTotal = total
+      - (hasBonus ? discountFor(500) : 0)
+      - (applyRODiscount ? roDiscountFor(1000) : 0)
+      - (isSynch ? downPayment / (cart[0]?.installments ?? 18) : downPayment);
+
     const itemsText = cart.map(c => {
-      const price = mode === 'synchrony' 
-        ? (c.installments === 18 ? c.product.prices.m18 : c.product.prices.m61)
-        : c.product.prices[mode];
-      return `• ${c.product.name} ×${c.quantity}: ${fmt.format((price || 0) * c.quantity)}${mode === 'synchrony' ? ` (${c.installments} meses)` : ''}`;
+      const price = getCartItemPrice(c, mode);
+      return `• ${c.product.name} ×${c.quantity}: ${fmt.format(price * c.quantity)}${isSynch ? ` (${c.installments} meses)` : ''}`;
     }).join('\n');
 
-    let msg = `🌊 *COTIZADOR WATER PRO*\nModo: ${modeLabel}\n${hasBonus ? '☀️💧 *Bundle Solar + Agua (Firma y Gana): -$500.00 aplicado*\n' : ''}${applyRODiscount ? '💧 *Bundle Reverse Osmosis: -$1,000.00 aplicado*\n' : ''}${downPayment > 0 ? `💰 *Pronto (Down Payment): -${fmt.format(downPayment)} aplicado*\n` : ''}\n${itemsText}\n\n*${mode === 'synchrony' ? 'TOTAL MENSUAL' : 'TOTAL'}: ${fmt.format(finalTotal)}*`;
-    
-    if (mode === 'synchrony') {
-      const totalFinanciado = cart.reduce((s, c) => s + (c.product.prices.synchrony || 0) * c.quantity, 0);
-      let finalFinanciado = hasBonus ? totalFinanciado - 500 : totalFinanciado;
-      if (applyRODiscount) finalFinanciado -= 1000;
-      if (downPayment > 0) finalFinanciado -= downPayment;
-      msg += `\n*Total Financiado: ${fmt.format(finalFinanciado)}*`;
+    let msg = `🌊 *COTIZADOR WATER PRO*\nModo: ${MODE_LABELS[mode]}\n`
+      + (hasBonus ? '☀️💧 *Bundle Solar + Agua (Firma y Gana): -$500.00 aplicado*\n' : '')
+      + (applyRODiscount ? '💧 *Bundle Reverse Osmosis: -$1,000.00 aplicado*\n' : '')
+      + (downPayment > 0 ? `💰 *Pronto (Down Payment): -${fmt.format(downPayment)} aplicado*\n` : '')
+      + `\n${itemsText}\n\n*${isSynch ? 'TOTAL MENSUAL' : 'TOTAL'}: ${fmt.format(finalTotal)}*`;
+
+    if (isSynch) {
+      const totalFinanciado = cart.reduce((s, c) => s + (c.product.prices.synchrony || 0) * c.quantity, 0)
+        - (hasBonus ? 500 : 0) - (applyRODiscount ? 1000 : 0) - downPayment;
+      msg += `\n*Total Financiado: ${fmt.format(totalFinanciado)}*`;
     }
-    
+
     msg += `\n\nAgente: Windmar Home PR`;
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   };

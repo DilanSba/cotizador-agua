@@ -123,13 +123,17 @@ export const MODE_LABELS: Record<string, string> = {
   kiwi: 'Kiwi'
 };
 
-/** Oriental y Cash usan los mismos precios de contado */
+/** Cash y Oriental usan los mismos precios de contado */
 export const isCashType = (mode: PaymentMode): boolean =>
   mode === 'cash' || mode === 'oriental';
 
-/** Kiwi y Synchrony usan los mismos precios de financiamiento */
+/** Synchrony usa precios de mensualidades (m18/m61) */
 export const isSynchronyType = (mode: PaymentMode): boolean =>
-  mode === 'synchrony' || mode === 'kiwi';
+  mode === 'synchrony';
+
+/** Kiwi muestra solo el total financiado (prices.synchrony), sin cuotas */
+export const isKiwiType = (mode: PaymentMode): boolean =>
+  mode === 'kiwi';
 
 /** Devuelve el precio efectivo del producto según modo */
 export const getEffectivePrice = (
@@ -138,7 +142,8 @@ export const getEffectivePrice = (
   installments: 18 | 61 = 18
 ): number | null => {
   if (isCashType(mode)) return product.prices.cash;
-  // synchrony / kiwi
+  if (isKiwiType(mode)) return product.prices.synchrony;
+  // synchrony
   if (installments === 61) return product.prices.m61;
   return product.prices.m18;
 };
