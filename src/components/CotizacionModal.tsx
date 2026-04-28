@@ -3,6 +3,44 @@ import { FileDown, X, Loader2, User, Building2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PaymentMode, CotizacionFormData, ConsultorInfo, ClienteInfo } from '../types';
 
+// ─── InputField fuera del componente padre para evitar remount en cada render ─
+
+interface InputFieldProps {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  type?: string;
+  autoComplete?: string;
+  required?: boolean;
+  error?: string;
+  disabled?: boolean;
+}
+
+const InputField: React.FC<InputFieldProps> = ({
+  label, value, onChange, placeholder, type = 'text',
+  autoComplete, required = false, error, disabled,
+}) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
+      {label}{required && <span className="text-blue-400 ml-0.5">*</span>}
+    </label>
+    <input
+      type={type}
+      value={value}
+      autoComplete={autoComplete}
+      onChange={e => onChange(e.target.value)}
+      placeholder={placeholder}
+      disabled={disabled}
+      className={`w-full px-3 py-2.5 rounded-xl text-[13px] font-medium outline-none transition-all bg-slate-800 border disabled:opacity-60 placeholder:text-slate-600 text-white
+        ${error ? 'border-red-500 bg-red-900/20' : 'border-slate-700 focus:border-blue-500'}`}
+    />
+    {error && <span className="text-[10px] text-red-400 font-semibold">{error}</span>}
+  </div>
+);
+
+// ─── Modal ────────────────────────────────────────────────────────────────────
+
 interface Props {
   isOpen: boolean;
   isGenerating: boolean;
@@ -16,11 +54,11 @@ type FormErrors = {
   modos?: string;
 };
 
-const MODES: { key: PaymentMode; label: string; color: string; activeClass: string; dot: string }[] = [
-  { key: 'cash',      label: 'CASH',      color: '#3b82f6', activeClass: 'bg-blue-600 border-blue-500 text-white',       dot: 'bg-blue-400' },
-  { key: 'synchrony', label: 'SYNCHRONY', color: '#8b5cf6', activeClass: 'bg-violet-600 border-violet-500 text-white',   dot: 'bg-violet-400' },
-  { key: 'oriental',  label: 'ORIENTAL',  color: '#10b981', activeClass: 'bg-emerald-600 border-emerald-500 text-white', dot: 'bg-emerald-400' },
-  { key: 'kiwi',      label: 'KIWI',      color: '#f59e0b', activeClass: 'bg-amber-500 border-amber-400 text-white',     dot: 'bg-amber-400' },
+const MODES: { key: PaymentMode; label: string; activeClass: string }[] = [
+  { key: 'cash',      label: 'CASH',      activeClass: 'bg-blue-600 border-blue-500 text-white' },
+  { key: 'synchrony', label: 'SYNCHRONY', activeClass: 'bg-violet-600 border-violet-500 text-white' },
+  { key: 'oriental',  label: 'ORIENTAL',  activeClass: 'bg-emerald-600 border-emerald-500 text-white' },
+  { key: 'kiwi',      label: 'KIWI',      activeClass: 'bg-amber-500 border-amber-400 text-white' },
 ];
 
 export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose, onGenerate }) => {
@@ -41,15 +79,15 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
   };
 
   const toggleInstallment = (
-    installments: (18 | 61)[],
+    current: (18 | 61)[],
     set: React.Dispatch<React.SetStateAction<(18 | 61)[]>>,
-    val: 18 | 61
+    val: 18 | 61,
   ) => {
-    if (installments.includes(val)) {
-      if (installments.length === 1) return;
-      set(installments.filter(i => i !== val));
+    if (current.includes(val)) {
+      if (current.length === 1) return;
+      set(current.filter(i => i !== val));
     } else {
-      set([...installments, val]);
+      set([...current, val]);
     }
   };
 
@@ -62,29 +100,6 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
     if (Object.keys(err).length) { setErrors(err); return; }
     onGenerate({ consultor, cliente, selectedModes, installmentsSync, installmentsKiwi });
   };
-
-  const InputField = ({
-    label, value, onChange, placeholder, type = 'text', required = false, error,
-  }: {
-    label: string; value: string; onChange: (v: string) => void;
-    placeholder: string; type?: string; required?: boolean; error?: string;
-  }) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
-        {label}{required && <span className="text-blue-400 ml-0.5">*</span>}
-      </label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        disabled={isGenerating}
-        className={`w-full px-3 py-2.5 rounded-xl text-[13px] font-medium outline-none transition-all bg-slate-800 border disabled:opacity-60 placeholder:text-slate-600 text-white
-          ${error ? 'border-red-500 bg-red-900/20' : 'border-slate-700 focus:border-blue-500 focus:bg-slate-750'}`}
-      />
-      {error && <span className="text-[10px] text-red-400 font-semibold">{error}</span>}
-    </div>
-  );
 
   return (
     <AnimatePresence>
@@ -125,9 +140,10 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
             )}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-5">
+          <form onSubmit={handleSubmit} autoComplete="on" className="p-6 flex flex-col gap-5">
             {/* Two-column grid: Consultor | Cliente */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+
               {/* Consultor */}
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-700/60">
@@ -138,23 +154,29 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
                   label="Nombre"
                   required
                   value={consultor.nombre}
+                  autoComplete="name"
                   onChange={v => { setConsultor(p => ({ ...p, nombre: v })); setErrors(e => ({ ...e, consultorNombre: undefined })); }}
                   placeholder="Tu nombre completo"
                   error={errors.consultorNombre}
+                  disabled={isGenerating}
                 />
                 <InputField
                   label="Correo"
+                  type="email"
                   value={consultor.correo}
+                  autoComplete="email"
                   onChange={v => setConsultor(p => ({ ...p, correo: v }))}
                   placeholder="correo@windmar.com"
-                  type="email"
+                  disabled={isGenerating}
                 />
                 <InputField
                   label="Teléfono"
+                  type="tel"
                   value={consultor.telefono}
+                  autoComplete="tel"
                   onChange={v => setConsultor(p => ({ ...p, telefono: v }))}
                   placeholder="787-000-0000"
-                  type="tel"
+                  disabled={isGenerating}
                 />
               </div>
 
@@ -168,34 +190,42 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
                   label="Nombre"
                   required
                   value={cliente.nombre}
+                  autoComplete="off"
                   onChange={v => { setCliente(p => ({ ...p, nombre: v })); setErrors(e => ({ ...e, clienteNombre: undefined })); }}
                   placeholder="Nombre del cliente"
                   error={errors.clienteNombre}
+                  disabled={isGenerating}
                 />
                 <InputField
                   label="Correo"
+                  type="email"
                   value={cliente.correo}
+                  autoComplete="off"
                   onChange={v => setCliente(p => ({ ...p, correo: v }))}
                   placeholder="cliente@email.com"
-                  type="email"
+                  disabled={isGenerating}
                 />
                 <InputField
                   label="Teléfono"
+                  type="tel"
                   value={cliente.telefono}
+                  autoComplete="off"
                   onChange={v => setCliente(p => ({ ...p, telefono: v }))}
                   placeholder="787-000-0000"
-                  type="tel"
+                  disabled={isGenerating}
                 />
                 <InputField
                   label="Dirección"
                   value={cliente.direccion}
+                  autoComplete="off"
                   onChange={v => setCliente(p => ({ ...p, direccion: v }))}
                   placeholder="Ciudad, Puerto Rico"
+                  disabled={isGenerating}
                 />
               </div>
             </div>
 
-            {/* Payment modes divider */}
+            {/* Payment modes */}
             <div className="border-t border-slate-700/60 pt-4">
               <div className="flex items-center gap-2 mb-1">
                 <FileDown className="w-3.5 h-3.5 text-slate-400" />
@@ -236,18 +266,14 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 p-3 bg-violet-900/20 border border-violet-700/30 rounded-xl"
+                  className="mt-3 p-3 bg-violet-900/20 border border-violet-700/30 rounded-xl overflow-hidden"
                 >
                   <p className="text-[10px] font-bold text-violet-300 uppercase tracking-[0.15em] mb-2">
                     Synchrony — Plazo de cuotas
                   </p>
                   <div className="flex gap-2">
                     {([18, 61] as const).map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        disabled={isGenerating}
+                      <button key={m} type="button" disabled={isGenerating}
                         onClick={() => toggleInstallment(installmentsSync, setInstallmentsSync, m)}
                         className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all
                           ${installmentsSync.includes(m)
@@ -266,18 +292,14 @@ export const CotizacionModal: React.FC<Props> = ({ isOpen, isGenerating, onClose
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="mt-3 p-3 bg-amber-900/20 border border-amber-700/30 rounded-xl"
+                  className="mt-3 p-3 bg-amber-900/20 border border-amber-700/30 rounded-xl overflow-hidden"
                 >
                   <p className="text-[10px] font-bold text-amber-300 uppercase tracking-[0.15em] mb-2">
                     Kiwi — Plazo de cuotas
                   </p>
                   <div className="flex gap-2">
                     {([18, 61] as const).map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        disabled={isGenerating}
+                      <button key={m} type="button" disabled={isGenerating}
                         onClick={() => toggleInstallment(installmentsKiwi, setInstallmentsKiwi, m)}
                         className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all
                           ${installmentsKiwi.includes(m)
