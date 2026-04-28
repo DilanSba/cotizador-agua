@@ -150,6 +150,10 @@ const s = StyleSheet.create({
   priceCell: { flex: 1, padding: 7, borderLeftWidth: 0.5, borderLeftColor: BRDR, justifyContent: 'center', alignItems: 'center' },
   priceMain: { fontFamily: 'Helvetica-Bold', fontSize: 9, textAlign: 'center' },
   priceSub: { fontSize: 6, color: MUTED, textAlign: 'center', marginTop: 1 },
+  ivuRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 2 },
+  ivuDivider: { height: 0.5, backgroundColor: BRDR, width: '100%', marginTop: 2 },
+  ivuLbl: { fontSize: 5.5, color: MUTED },
+  ivuVal: { fontSize: 5.5, color: MUTED, fontFamily: 'Helvetica-Bold' },
 
   // Discount bar
   discBar: {
@@ -337,9 +341,28 @@ export const QuoteDocument: React.FC<QuoteDocumentProps> = ({
                         {col.isMonthly && (
                           <Text style={s.priceSub}>{col.installments}m c/u</Text>
                         )}
-                        {!col.isMonthly && item.product.cashSinIvu != null && (
-                          <Text style={s.priceSub}>+IVU 11.5%</Text>
-                        )}
+                        {!col.isMonthly && (() => {
+                          const sinIvu = col.key === 'kiwi'
+                            ? item.product.synchronySinIvu
+                            : item.product.cashSinIvu;
+                          const ivuAmt = col.key === 'kiwi'
+                            ? item.product.ivu
+                            : item.product.ivuCash;
+                          if (sinIvu == null) return null;
+                          return (
+                            <>
+                              <View style={s.ivuDivider} />
+                              <View style={s.ivuRow}>
+                                <Text style={s.ivuLbl}>Sin IVU:</Text>
+                                <Text style={s.ivuVal}>{fmt(sinIvu * item.quantity)}</Text>
+                              </View>
+                              <View style={s.ivuRow}>
+                                <Text style={s.ivuLbl}>IVU 11.5%:</Text>
+                                <Text style={s.ivuVal}>{fmt((ivuAmt ?? 0) * item.quantity)}</Text>
+                              </View>
+                            </>
+                          );
+                        })()}
                       </>
                     ) : (
                       <Text style={[s.priceSub, { color: '#94a3b8' }]}>N/D</Text>
