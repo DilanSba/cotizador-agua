@@ -1,27 +1,31 @@
 import { Product, PaymentMode } from './types';
 
 export const PRODUCTS: Product[] = [
-  { 
-    id: 'trat-ro', 
-    category: 'Sistemas de tratamiento', 
-    name: 'Reverse Osmosis', 
-    personas: null, 
-    description: 'Agua pura para beber directamente del grifo. Elimina sedimentos, cloro y contaminantes.', 
-    imageUrl: 'https://i.postimg.cc/Jz5g2W36/Reverse-Osmosis.png', 
-    prices: { cash: 3201.17, synchrony: null, m18: null, m61: null }, 
-    cashSinIvu: 2871.00, 
-    ivuCash: 330.17 
+  {
+    id: 'trat-ro',
+    category: 'Sistemas de tratamiento',
+    name: 'Reverse Osmosis',
+    personas: null,
+    description: 'Agua pura para beber directamente del grifo. Elimina sedimentos, cloro y contaminantes.',
+    imageUrl: 'https://i.postimg.cc/Jz5g2W36/Reverse-Osmosis.png',
+    prices: { cash: 3201.17, synchrony: 3201.17, m18: null, m61: null },
+    synchronySinIvu: 2871.00,
+    ivu: 330.17,
+    cashSinIvu: 2871.00,
+    ivuCash: 330.17
   },
-  { 
-    id: 'trat-poe', 
-    category: 'Sistemas de tratamiento', 
-    name: 'Suavizador POE', 
-    personas: null, 
-    description: 'Tratamiento para toda la casa. Protege tuberías, electrodomésticos y mejora la calidad del agua.', 
-    imageUrl: 'https://i.postimg.cc/7P5FYdDn/Suavizador-POE.png', 
-    prices: { cash: 5509.22, synchrony: null, m18: null, m61: null }, 
-    cashSinIvu: 4941.00, 
-    ivuCash: 568.22 
+  {
+    id: 'trat-poe',
+    category: 'Sistemas de tratamiento',
+    name: 'Suavizador POE',
+    personas: null,
+    description: 'Tratamiento para toda la casa. Protege tuberías, electrodomésticos y mejora la calidad del agua.',
+    imageUrl: 'https://i.postimg.cc/7P5FYdDn/Suavizador-POE.png',
+    prices: { cash: 5509.22, synchrony: 5509.22, m18: null, m61: null },
+    synchronySinIvu: 4941.00,
+    ivu: 568.22,
+    cashSinIvu: 4941.00,
+    ivuCash: 568.22
   },
   { 
     id: 'cal-80-1p', 
