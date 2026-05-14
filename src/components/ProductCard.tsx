@@ -39,15 +39,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
         )}
       </div>
 
-      {/* Imagen */}
-      <div className="h-28 sm:h-36 flex items-center justify-center p-3">
+      {/* Imagen — altura fija + h-full fuerza a normalizar por alto.
+          Wrapper aplica scale base por-producto (inline); img aplica hover (Tailwind).
+          Los transforms se componen porque están en elementos distintos. */}
+      <div className="h-32 sm:h-40 flex items-center justify-center p-2 sm:p-3 overflow-hidden">
         {product.imageUrl ? (
-          <img
-            src={product.imageUrl}
-            alt={product.name}
-            referrerPolicy="no-referrer"
-            className="max-h-full max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
-          />
+          <div
+            className="h-full flex items-center justify-center"
+            style={{ transform: `scale(${product.imageScale ?? 1})` }}
+          >
+            <img
+              src={product.imageUrl}
+              alt={product.name}
+              referrerPolicy="no-referrer"
+              className="h-full w-auto max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+            />
+          </div>
         ) : (
           <div className="w-14 h-14 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400 font-bold text-lg">W</div>
         )}
