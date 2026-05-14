@@ -21,6 +21,8 @@ export interface Product {
   ivu?: number;
   cashSinIvu?: number;
   ivuCash?: number;
+  /** Multiplicador visual para normalizar tamaño de imagen en el grid. Default = 1 */
+  imageScale?: number;
 }
 
 export interface CartItem {
