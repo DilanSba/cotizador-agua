@@ -12,7 +12,7 @@ export const Header: React.FC<HeaderProps> = ({ isDarkMode, setIsDarkMode }) => 
     <header className="flex flex-col md:flex-row justify-between items-center gap-6">
       <div className="flex items-center gap-4 md:gap-6">
         <img
-          src="https://i.postimg.cc/PqD3CmtW/WIndmar-water.png"
+          src="/windmar-water.png"
           className="h-14 md:h-16 w-auto transform hover:scale-105 transition-transform"
           alt="Windmar Water"
           referrerPolicy="no-referrer"
