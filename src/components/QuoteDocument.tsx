@@ -227,7 +227,7 @@ export interface QuoteDocumentProps {
   primarySyncTerm?: 18 | 61;
 }
 
-const LOGO = 'https://i.postimg.cc/PqD3CmtW/WIndmar-water.png';
+const LOGO = '/windmar-water.png';
 
 // ─── ModeSection ───────────────────────────────────────────────────────────
 

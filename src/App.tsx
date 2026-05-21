@@ -221,7 +221,7 @@ export default function App() {
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="w-80 h-80 object-contain drop-shadow-2xl" 
-                  src="https://i.postimg.cc/PqD3CmtW/WIndmar-water.png" 
+                  src="/windmar-water.png"
                   alt="WindMar Logo" 
                   referrerPolicy="no-referrer" 
                 />
